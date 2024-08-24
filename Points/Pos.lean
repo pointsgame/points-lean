@@ -50,30 +50,6 @@ theorem adjacent_to_top_right {pos₁ pos₂ pos₃: Pos width height} (adj_r: A
   exact adj_t.left ▸ adj_r.left
   exact adj_r.right ▸ Eq.symm adj_t.right
 
-instance {pos₁ pos₂: Pos width height}: Coe (AdjacentRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inl
-
-instance {pos₁ pos₂: Pos width height}: Coe (AdjacentLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inl
-
-instance {pos₁ pos₂: Pos width height}: Coe (AdjacentBottom pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inl
-
-instance {pos₁ pos₂: Pos width height}: Coe (AdjacentTop pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inr ∘ .inl
-
-instance {pos₁ pos₂: Pos width height}: Coe (AdjacentBottomRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
-
-instance {pos₁ pos₂: Pos width height}: Coe (AdjacentTopLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
-
-instance {pos₁ pos₂: Pos width height}: Coe (AdjacentTopRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
-
-instance {pos₁ pos₂: Pos width height}: Coe (AdjacentBottomLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr
-
 def n (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentTop pos₁ pos₂ :=
   match pos₁ with
   | ⟨_, ⟨0, _⟩⟩ => Option.none
@@ -115,3 +91,51 @@ def se (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottomRight pos�
   let ⟨epos, adj₁⟩ ← e pos₁
   let ⟨sepos, adj₂⟩ ← s epos
   return ⟨sepos, adjacent_to_bottom_right adj₁ adj₂⟩
+
+instance adjacent_top: Coe (AdjacentTop pos₁ pos₂) (Adjacent pos₁ pos₂) where
+  coe := .inr ∘ .inr ∘ .inr ∘ .inl
+
+def n' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  (n pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+
+instance adjacent_bottom: Coe (AdjacentBottom pos₁ pos₂) (Adjacent pos₁ pos₂) where
+  coe := .inr ∘ .inr ∘ .inl
+
+def s' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  (s pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+
+instance adjacent_left: Coe (AdjacentLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
+  coe := .inr ∘ .inl
+
+def w' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  (w pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+
+instance adjacent_right: Coe (AdjacentRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
+  coe := .inl
+
+def e' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  (e pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+
+instance adjacent_top_left: Coe (AdjacentTopLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
+   coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
+
+def nw' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  (nw pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+
+instance adjacent_top_right: Coe (AdjacentTopRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
+   coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
+
+def ne' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  (ne pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+
+instance adjacent_bottom_left: Coe (AdjacentBottomLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
+  coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr
+
+def sw' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  (sw pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+
+instance adjacent_bottom_right: Coe (AdjacentBottomRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
+  coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
+
+def se' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  (se pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
