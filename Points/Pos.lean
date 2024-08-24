@@ -30,6 +30,16 @@ abbrev AdjacentTopLeft (pos₁: Pos width height) (pos₂: Pos width height): Pr
 abbrev AdjacentBottomLeft (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
   AdjacentTopRight pos₂ pos₁
 
+theorem adjacent_to_bottom_right {pos₁ pos₂ pos₃ : Pos width height} (adj_r: AdjacentRight pos₁ pos₂) (adj_b: AdjacentBottom pos₂ pos₃): AdjacentBottomRight pos₁ pos₃ := by
+  apply And.intro
+  exact adj_b.left ▸ adj_r.left
+  exact adj_r.right ▸ adj_b.right
+
+theorem adjacent_to_top_right {pos₁ pos₂ pos₃ : Pos width height} (adj_r: AdjacentRight pos₁ pos₂) (adj_t: AdjacentTop pos₂ pos₃): AdjacentTopRight pos₁ pos₃ := by
+  apply And.intro
+  exact adj_t.left ▸ adj_r.left
+  exact adj_r.right ▸ Eq.symm adj_t.right
+
 def n (pos₁: Pos width height): Option $ Σ' pos₂: Pos width height, AdjacentTop pos₁ pos₂ :=
   match pos₁ with
   | ⟨_, ⟨0, _⟩⟩ => Option.none
