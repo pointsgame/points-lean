@@ -6,20 +6,16 @@ def Pos (width height : Nat) : Type :=
 
 namespace Pos
 
-abbrev AdjacentRight (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
-  match pos₁, pos₂ with
+abbrev AdjacentRight: Pos width height → Pos width height → Prop
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => x₁.succ = x₂.castSucc ∧ y₁ = y₂
 
-abbrev AdjacentBottom (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
-  match pos₁, pos₂ with
+abbrev AdjacentBottom: Pos width height → Pos width height → Prop
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => x₁ = x₂ ∧ y₁.succ = y₂.castSucc
 
-abbrev AdjacentBottomRight (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
-  match pos₁, pos₂ with
+abbrev AdjacentBottomRight: Pos width height → Pos width height → Prop
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => x₁.succ = x₂.castSucc ∧ y₁.succ = y₂.castSucc
 
-abbrev AdjacentTopRight (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
-  match pos₁, pos₂ with
+abbrev AdjacentTopRight: Pos width height → Pos width height → Prop
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => x₁.succ = x₂.castSucc ∧ y₁.castSucc = y₂.succ
 
 abbrev AdjacentLeft (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
