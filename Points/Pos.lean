@@ -40,23 +40,23 @@ theorem adjacent_to_top_right {pos₁ pos₂ pos₃ : Pos width height} (adj_r: 
   exact adj_t.left ▸ adj_r.left
   exact adj_r.right ▸ Eq.symm adj_t.right
 
-def n (pos₁: Pos width height): Option $ Σ' pos₂: Pos width height, AdjacentTop pos₁ pos₂ :=
+def n (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentTop pos₁ pos₂ :=
   match pos₁ with
   | ⟨_, ⟨0, _⟩⟩ => Option.none
   | ⟨x, ⟨Nat.succ y, h⟩⟩ => Option.some ⟨⟨x, ⟨y, Nat.lt_of_succ_lt h⟩⟩, by apply And.intro; rfl; rfl⟩
 
-def s (pos₁: Pos width height): Option $ Σ' pos₂: Pos width height, AdjacentBottom pos₁ pos₂ :=
+def s (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottom pos₁ pos₂ :=
   let y := ↑pos₁.snd.succ
   if h: y < height
   then Option.some ⟨⟨pos₁.fst, ⟨y, h⟩⟩, by apply And.intro; rfl; rfl⟩
   else Option.none
 
-def w (pos₁: Pos width height): Option $ Σ' pos₂: Pos width height, AdjacentLeft pos₁ pos₂ :=
+def w (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentLeft pos₁ pos₂ :=
   match pos₁ with
   | ⟨⟨0, _⟩, _⟩ => Option.none
   | ⟨⟨Nat.succ x, h⟩, y⟩ => Option.some ⟨⟨⟨x, Nat.lt_of_succ_lt h⟩, y⟩, by apply And.intro; rfl; rfl⟩
 
-def e (pos₁: Pos width height): Option $ Σ' pos₂: Pos width height, AdjacentRight pos₁ pos₂ :=
+def e (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentRight pos₁ pos₂ :=
   let x := ↑pos₁.fst.succ
   if h: x < width
   then Option.some ⟨⟨⟨x, h⟩, pos₁.snd⟩, by apply And.intro; rfl; rfl⟩
