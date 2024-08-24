@@ -61,3 +61,23 @@ def e (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentRight pos₁ pos�
   if h: x < width
   then Option.some ⟨⟨⟨x, h⟩, pos₁.snd⟩, by apply And.intro; rfl; rfl⟩
   else Option.none
+
+def nw (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentTopLeft pos₁ pos₂ := do
+  let ⟨npos, adj₁⟩ ← n pos₁
+  let ⟨nwpos, adj₂⟩ ← w npos
+  return ⟨nwpos, adjacent_to_bottom_right adj₂ adj₁⟩
+
+def ne (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentTopRight pos₁ pos₂ := do
+  let ⟨epos, adj₁⟩ ← e pos₁
+  let ⟨nepos, adj₂⟩ ← n epos
+  return ⟨nepos, adjacent_to_top_right adj₁ adj₂⟩
+
+def sw (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottomLeft pos₁ pos₂ := do
+  let ⟨spos, adj₁⟩ ← s pos₁
+  let ⟨swpos, adj₂⟩ ← w spos
+  return ⟨swpos, adjacent_to_top_right adj₂ adj₁⟩
+
+def se (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottomRight pos₁ pos₂ := do
+  let ⟨epos, adj₁⟩ ← e pos₁
+  let ⟨sepos, adj₂⟩ ← s epos
+  return ⟨sepos , adjacent_to_bottom_right adj₁ adj₂⟩
