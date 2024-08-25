@@ -1,8 +1,9 @@
 inductive Player where
   | red : Player
   | black : Player
+deriving BEq, Hashable, Repr, Inhabited
 
-instance : ToString Player where
+instance: ToString Player where
   toString (player : Player) : String :=
     match player with
     | Player.red => "Red"
