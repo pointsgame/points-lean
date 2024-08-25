@@ -1,10 +1,15 @@
+import Mathlib.Logic.Equiv.Fin
+
 /--
 x goes right, y goes down
 -/
-def Pos (width height: Nat): Type :=
+abbrev Pos (width height: Nat): Type :=
   Fin width × Fin height
 
 namespace Pos
+
+def toFin (pos: Pos width height): Fin $ width * height :=
+  finProdFinEquiv pos
 
 abbrev AdjacentRight: Pos width height → Pos width height → Prop
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => x₁.succ = x₂.castSucc ∧ y₁ = y₂
