@@ -144,3 +144,97 @@ instance adjacent_bottom_right: Coe (AdjacentBottomRight pos₁ pos₂) (Adjacen
 
 def se' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (se pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+
+inductive Direction where
+  | dir_right: Direction
+  | dir_bottom_right: Direction
+  | dir_bottom: Direction
+  | dir_bottom_left: Direction
+  | dir_left: Direction
+  | dir_top_left: Direction
+  | dir_top: Direction
+  | dir_top_right: Direction
+
+open Direction
+
+def inverse: Direction → Direction
+  | dir_right => dir_left
+  | dir_bottom_right => dir_top_left
+  | dir_bottom => dir_top
+  | dir_bottom_left => dir_top_right
+  | dir_left => dir_right
+  | dir_top_left => dir_bottom_right
+  | dir_top => dir_bottom
+  | dir_top_right => dir_bottom_left
+
+def rotate: Direction → Direction
+  | dir_right => dir_bottom_right
+  | dir_bottom_right => dir_bottom
+  | dir_bottom => dir_bottom_left
+  | dir_bottom_left => dir_left
+  | dir_left => dir_top_left
+  | dir_top_left => dir_top
+  | dir_top => dir_top_right
+  | dir_top_right => dir_right
+
+def rotate_not_adjacent: Direction → Direction
+  | dir_right => dir_bottom_left
+  | dir_bottom_right => dir_bottom_left
+  | dir_bottom => dir_top_left
+  | dir_bottom_left => dir_top_left
+  | dir_left => dir_top_right
+  | dir_top_left => dir_top_right
+  | dir_top => dir_bottom_right
+  | dir_top_right => dir_bottom_right
+
+def direction {pos₁ pos₂: Pos width height} (adj: Adjacent pos₁ pos₂): Direction :=
+  if h₁: AdjacentRight pos₁ pos₂ then
+    dir_right
+  else if h₂: AdjacentLeft pos₁ pos₂ then
+    dir_left
+  else if h₃: AdjacentBottom pos₁ pos₂ then
+    dir_bottom
+  else if h₄: AdjacentTop pos₁ pos₂ then
+    dir_top
+  else if h₅: AdjacentBottomRight pos₁ pos₂ then
+    dir_bottom_right
+  else if h₆: AdjacentTopLeft pos₁ pos₂ then
+    dir_top_left
+  else if h₇: AdjacentTopRight pos₁ pos₂ then
+    dir_top_right
+  else if h₈: AdjacentBottomLeft pos₁ pos₂ then
+    dir_bottom_left
+  else
+    False.elim <| by
+      apply Or.elim adj
+      . exact (absurd · h₁)
+      . intro h
+        apply Or.elim h
+        . exact (absurd · h₂)
+        . intro h
+          apply Or.elim h
+          . exact (absurd · h₃)
+          . intro h
+            apply Or.elim h
+            . exact (absurd · h₄)
+            . intro h
+              apply Or.elim h
+              . exact (absurd · h₅)
+              . intro h
+                apply Or.elim h
+                . exact (absurd · h₆)
+                . intro h
+                  apply Or.elim h
+                  . exact (absurd · h₇)
+                  . exact (absurd · h₈)
+
+def direction_to_pos (dir: Direction): (pos₁: Pos width height) → Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
+  match dir with
+  | dir_right => e'
+  | dir_bottom_right => se'
+  | dir_bottom => s'
+  | dir_bottom_left => sw'
+  | dir_left => w'
+  | dir_top_left => nw'
+  | dir_top => n'
+  | dir_top_right => ne'
