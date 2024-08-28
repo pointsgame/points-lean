@@ -12,6 +12,8 @@ structure Field where
   points: Array Point -- TODO: use Vector from Batteries when it's available in release
   size_eq: points.size = width * height
 
+namespace Field
+
 def cell (field: @Field width height) (pos: Pos width height): Point :=
   field.points.get <| pos.toFin.cast field.size_eq.symm
 
@@ -62,3 +64,32 @@ def wave' (startPos: Pos width height) (f: Pos width height → Bool): Lean.Hash
     else
       return false
   (StateT.run (wave startPos fState) Lean.HashSet.empty).snd
+
+def getInputPoints (field: @Field width height) (pos: Pos width height) (player: Player): List $ (Σ' chainPos, Pos.Adjacent pos chainPos) × (Σ' capturedPos, Pos.Adjacent pos capturedPos) :=
+  let isDirectionPlayer (dir: (pos₁: Pos width height) → Option $ Σ' pos₂, Pos.Adjacent pos₁ pos₂): Bool :=
+        (dir pos).elim false fun ⟨dirPos, _⟩ => field.isPlayer dirPos player
+  let list₁ := if not $ isDirectionPlayer Pos.w' then
+                 if isDirectionPlayer Pos.nw' then pos.nw'.toList.zip pos.w'.toList
+                 else if isDirectionPlayer Pos.n' then pos.n'.toList.zip pos.w'.toList
+                 else []
+               else
+                 []
+  let list₂ := if not $ isDirectionPlayer Pos.s' then
+                if isDirectionPlayer Pos.sw' then (pos.sw'.toList.zip pos.s'.toList) ++ list₁
+                else if isDirectionPlayer Pos.w' then (pos.w'.toList.zip pos.s'.toList) ++ list₁
+                else list₁
+              else
+                list₁
+  let list₃ := if not $ isDirectionPlayer Pos.e' then
+                if isDirectionPlayer Pos.se' then (pos.se'.toList.zip pos.e'.toList) ++ list₂
+                else if isDirectionPlayer Pos.s' then (pos.s'.toList.zip pos.e'.toList) ++ list₂
+                else list₂
+              else
+                list₂
+  let list₄ := if not $ isDirectionPlayer Pos.n' then
+                if isDirectionPlayer Pos.ne' then (pos.ne'.toList.zip pos.n'.toList) ++ list₃
+                else if isDirectionPlayer Pos.e' then (pos.e'.toList.zip pos.n'.toList) ++ list₃
+                else list₃
+              else
+                list₃
+  list₄
