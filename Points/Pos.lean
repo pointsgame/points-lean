@@ -45,6 +45,16 @@ abbrev Adjacent (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
   AdjacentTopRight pos₁ pos₂ ∨
   AdjacentBottomLeft pos₁ pos₂
 
+theorem adjacent_symm {pos₁ pos₂: Pos width height}: Adjacent pos₁ pos₂ → Adjacent pos₂ pos₁
+  | Or.inl adj => Or.inr $ Or.inl adj
+  | Or.inr $ Or.inl adj => Or.inl adj
+  | Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inr $ Or.inl adj
+  | Or.inr $ Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inl adj
+  | Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj
+  | Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj
+  | Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr adj
+  | Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr adj => Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj
+
 theorem adjacent_to_bottom_right {pos₁ pos₂ pos₃: Pos width height} (adj_r: AdjacentRight pos₁ pos₂) (adj_b: AdjacentBottom pos₂ pos₃): AdjacentBottomRight pos₁ pos₃ := by
   apply And.intro
   exact adj_b.left ▸ adj_r.left
