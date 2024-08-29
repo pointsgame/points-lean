@@ -93,3 +93,25 @@ def getInputPoints (field: @Field width height) (pos: Pos width height) (player:
               else
                 list₃
   list₄
+
+def buildChain (field: @Field width height) (startPos nextPos: Pos width height) (adj: Pos.Adjacent startPos nextPos) (player: Player): Option $ List $ Pos width height := Id.run do
+  let mut chain := [startPos]
+  -- ⟨centerPos, pos, adj⟩
+  let mut inv: Σ' pos₁ pos₂, Pos.Adjacent pos₁ pos₂ := ⟨startPos, nextPos, adj⟩
+  repeat
+    if chain.contains inv.2.1 then
+      chain := chain.dropWhile (· != inv.2.1)
+    else
+      chain := inv.2.1 :: chain
+    inv := ⟨inv.2.1, inv.1, Pos.adjacent_symm inv.2.2⟩
+    let mut direction := Pos.rotate_not_adjacent $ Pos.direction inv.2.2
+    repeat
+      if let Option.some ⟨pos, adj⟩ := Pos.direction_to_pos direction inv.1 then
+        if field.isPlayer pos player then
+          inv := ⟨inv.1, pos, adj⟩
+          break
+      direction := Pos.rotate direction
+    if inv.2.1 = startPos then
+      break
+  -- TODO: check square
+  Option.some chain
