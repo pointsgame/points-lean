@@ -4,6 +4,11 @@ import Points.Point
 
 variable {width height: Nat}
 
+structure NonEmptyList (a: Type) where
+  mk ::
+  list: List a
+  nonEmpty: list ≠ []
+
 structure Field where
   scoreRed: Nat
   scoreBlack: Nat
@@ -98,7 +103,7 @@ def skewProduct (pos₁: Pos width height) (pos₂: Pos width height): Int :=
   match pos₁, pos₂ with
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => Int.ofNat x₁ * Int.ofNat y₂ - Int.ofNat y₁ * Int.ofNat x₂
 
-def buildChain (field: @Field width height) (startPos nextPos: Pos width height) (adj: Pos.Adjacent startPos nextPos) (player: Player): Option $ List $ Pos width height := Id.run do
+def buildChain (field: @Field width height) (startPos nextPos: Pos width height) (adj: Pos.Adjacent startPos nextPos) (player: Player): Option $ NonEmptyList $ Pos width height := Id.run do
   let mut chain := [startPos]
   -- ⟨centerPos, pos, adj⟩
   let mut inv: Σ' pos₁ pos₂, Pos.Adjacent pos₁ pos₂ := ⟨startPos, nextPos, adj⟩
@@ -119,6 +124,12 @@ def buildChain (field: @Field width height) (startPos nextPos: Pos width height)
     square := square + skewProduct inv.1 inv.2.1
     if inv.2.1 = startPos then
       break
-  if square < 0 && chain.length > 2
-  then Option.some chain
+  if square < 0
+  then
+    if h: chain.length > 2
+    then Option.some $ NonEmptyList.mk chain $ by
+           apply Exists.elim $ Nat.exists_eq_succ_of_ne_zero $ Nat.pos_iff_ne_zero.mp $ Nat.zero_lt_of_lt h
+           intro _
+           exact List.ne_nil_of_length_eq_succ
+    else Option.none
   else Option.none
