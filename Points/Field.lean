@@ -127,9 +127,6 @@ def buildChain (field: @Field width height) (startPos nextPos: Pos width height)
   if square < 0
   then
     if h: chain.length > 2
-    then Option.some $ NonEmptyList.mk chain $ by
-           apply Exists.elim $ Nat.exists_eq_succ_of_ne_zero $ Nat.pos_iff_ne_zero.mp $ Nat.zero_lt_of_lt h
-           intro _
-           exact List.ne_nil_of_length_eq_succ
+    then Option.some $ NonEmptyList.mk chain $ List.length_pos.mp $ Nat.zero_lt_of_lt h
     else Option.none
   else Option.none
