@@ -12,8 +12,7 @@ structure NonEmptyList (a: Type) where
 structure Field where
   scoreRed: Nat
   scoreBlack: Nat
-  moves: List (Pos width height × Player)
-  lastSurroundPlayer: Player
+  moves: List $ Pos width height × Player
   points: Array Point -- TODO: use Vector from Batteries when it's available in release
   size_eq: points.size = width * height
 
@@ -38,7 +37,6 @@ def emptyField: @Field width height :=
   { scoreRed := 0
   , scoreBlack := 0
   , moves := []
-  , lastSurroundPlayer := Player.red
   , points := mkArray (width * height) Point.EmptyPoint
   , size_eq := Array.size_mkArray ..
   }
@@ -159,7 +157,7 @@ def posInsideRing (pos: Pos width height) (ring: NonEmptyList $ Pos width height
     | IntersectionState.Down => if state == IntersectionState.Up then
                                   intersections := intersections + 1
                                 state := IntersectionState.Down
-    | IntersectionState.Target => pure ()
+    | IntersectionState.Target => ()
   if state == IntersectionState.Up || state == IntersectionState.Down then
     let mut beginState := IntersectionState.None
     for nextPos in ring.list do
@@ -170,6 +168,9 @@ def posInsideRing (pos: Pos width height) (ring: NonEmptyList $ Pos width height
        state == IntersectionState.Down && beginState == IntersectionState.Up then
       intersections := intersections + 1
   intersections % 2 == 1
+
+def getEmptyBase (field: @Field width height) (pos: Pos width height) (player: Player): NonEmptyList (Pos width height) × Lean.HashSet (Pos width height) :=
+  sorry
 
 def capture (player: Player) (point: Point): Point :=
   match point with
@@ -185,4 +186,15 @@ def capture (player: Player) (point: Point): Point :=
   | Point.EmptyBasePoint _ => Point.BasePoint player false
 
 def putPoint (field: @Field width height) (pos: Pos width height) (player: Player) (_: isPuttingAllowed field pos = true): @Field width height :=
-  sorry
+  let enemyPlayer := player.next
+  let point := field.cell pos
+  let newMoves := ⟨pos, player⟩ :: field.moves
+  if point == Point.EmptyBasePoint player then
+    { scoreRed := field.scoreRed
+    , scoreBlack := field.scoreBlack
+    , moves := newMoves
+    , points := field.points.set (Fin.cast (Eq.symm field.size_eq) pos.toFin) $ Point.PlayerPoint player
+    , size_eq := by simp [field.size_eq]
+    }
+  else
+    sorry
