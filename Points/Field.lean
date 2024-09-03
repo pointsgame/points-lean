@@ -130,3 +130,59 @@ def buildChain (field: @Field width height) (startPos nextPos: Pos width height)
     then Option.some $ NonEmptyList.mk chain $ List.length_pos.mp $ Nat.zero_lt_of_lt h
     else Option.none
   else Option.none
+
+inductive IntersectionState where
+  | None: IntersectionState
+  | Up: IntersectionState
+  | Target: IntersectionState
+  | Down: IntersectionState
+deriving BEq, Hashable, Repr, Inhabited
+
+def getIntersectionState (pos: Pos width height) (nextPos: Pos width height): IntersectionState :=
+  if nextPos.fst <= pos.fst
+  then match Int.ofNat nextPos.snd - Int.ofNat pos.snd with
+       | 1 => IntersectionState.Up
+       | 0 => IntersectionState.Target
+       | -1 => IntersectionState.Down
+       | _ => IntersectionState.None
+  else IntersectionState.None
+
+def posInsideRing (pos: Pos width height) (ring: NonEmptyList $ Pos width height): Bool := Id.run do
+  let mut intersections := 0
+  let mut state := IntersectionState.None
+  for nextPos in ring.list do
+    match getIntersectionState pos nextPos with
+    | IntersectionState.None => state := IntersectionState.None
+    | IntersectionState.Up => if state == IntersectionState.Down then
+                                intersections := intersections + 1
+                              state := IntersectionState.Up
+    | IntersectionState.Down => if state == IntersectionState.Up then
+                                  intersections := intersections + 1
+                                state := IntersectionState.Down
+    | IntersectionState.Target => pure ()
+  if state == IntersectionState.Up || state == IntersectionState.Down then
+    let mut beginState := IntersectionState.None
+    for nextPos in ring.list do
+      beginState := getIntersectionState pos nextPos
+      if beginState != IntersectionState.Target then
+        break
+    if state == IntersectionState.Up && beginState == IntersectionState.Down ||
+       state == IntersectionState.Down && beginState == IntersectionState.Up then
+      intersections := intersections + 1
+  intersections % 2 == 1
+
+def capture (player: Player) (point: Point): Point :=
+  match point with
+  | Point.EmptyPoint => Point.BasePoint player false
+  | Point.PlayerPoint player' => if player' == player
+                                 then Point.PlayerPoint player'
+                                 else Point.BasePoint player true
+  | Point.BasePoint player' enemy => if player' == player
+                                     then Point.BasePoint player' enemy
+                                     else if enemy
+                                     then Point.PlayerPoint player
+                                     else Point.BasePoint player false
+  | Point.EmptyBasePoint _ => Point.BasePoint player false
+
+def putPoint (field: @Field width height) (pos: Pos width height) (player: Player) (_: isPuttingAllowed field pos = true): @Field width height :=
+  sorry
