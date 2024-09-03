@@ -169,8 +169,23 @@ def posInsideRing (pos: Pos width height) (ring: NonEmptyList $ Pos width height
       intersections := intersections + 1
   intersections % 2 == 1
 
-def getEmptyBase (field: @Field width height) (pos: Pos width height) (player: Player): NonEmptyList (Pos width height) × Lean.HashSet (Pos width height) :=
-  sorry
+def getInsideRing (pos: Pos width height) (ring: NonEmptyList $ Pos width height): Lean.HashSet $ Pos width height :=
+  let ringSet := Lean.HashSet.ofList ring.list
+  wave' pos (!ringSet.contains ·)
+
+def getEmptyBaseChain (field: @Field width height) (startPos: Pos width height) (player: Player): Option $ NonEmptyList $ Pos width height := Id.run do
+  let mut pos := startPos
+  repeat
+    if let Option.some pos' := pos.w then
+      pos := pos'.fst
+    else
+      break
+    if field.isPlayer pos player then
+      let inputPoints := field.getInputPoints pos player
+      let chains := inputPoints.filterMap fun ⟨⟨chainPos, adj⟩, _⟩ => field.buildChain pos chainPos adj player
+      if let Option.some chain := chains.find? (posInsideRing startPos) then
+        return chain
+  Option.none
 
 def capture (player: Player) (point: Point): Point :=
   match point with
