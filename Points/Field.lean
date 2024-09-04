@@ -9,17 +9,30 @@ structure NonEmptyList (a: Type) where
   list: List a
   nonEmpty: list ≠ []
 
+-- TODO: use Vector from Batteries when it's available in release
+structure Vector (a: Type) (n: Nat) where
+  mk ::
+  array: Array a
+  size_eq: array.size = n
+
+namespace Vector
+  def get (vector: Vector a n) (i: Fin n): a :=
+    vector.array.get <| i.cast vector.size_eq.symm
+
+  def set (vector: Vector a n) (i: Fin n) (x: a): Vector a n :=
+    ⟨vector.array.set (Fin.cast vector.size_eq.symm i) x, by simp [vector.size_eq]⟩
+end Vector
+
 structure Field where
   scoreRed: Nat
   scoreBlack: Nat
   moves: List $ Pos width height × Player
-  points: Array Point -- TODO: use Vector from Batteries when it's available in release
-  size_eq: points.size = width * height
+  points: Vector Point $ width * height
 
 namespace Field
 
 def cell (field: @Field width height) (pos: Pos width height): Point :=
-  field.points.get <| pos.toFin.cast field.size_eq.symm
+  field.points.get pos.toFin
 
 def isPuttingAllowed (field: @Field width height) (pos: Pos width height): Bool :=
   (cell field pos).isPuttingAllowed
@@ -37,8 +50,7 @@ def emptyField: @Field width height :=
   { scoreRed := 0
   , scoreBlack := 0
   , moves := []
-  , points := mkArray (width * height) Point.EmptyPoint
-  , size_eq := Array.size_mkArray ..
+  , points := Vector.mk (mkArray (width * height) Point.EmptyPoint) $ Array.size_mkArray ..
   }
 
 def wave [Monad m] (startPos: Pos width height) (f: Pos width height → m Bool): m Unit := do
@@ -201,15 +213,36 @@ def capture (player: Player) (point: Point): Point :=
   | Point.EmptyBasePoint _ => Point.BasePoint player false
 
 def putPoint (field: @Field width height) (pos: Pos width height) (player: Player) (_: isPuttingAllowed field pos = true): @Field width height :=
-  let enemyPlayer := player.next
   let point := field.cell pos
   let newMoves := ⟨pos, player⟩ :: field.moves
   if point == Point.EmptyBasePoint player then
     { scoreRed := field.scoreRed
     , scoreBlack := field.scoreBlack
     , moves := newMoves
-    , points := field.points.set (Fin.cast (Eq.symm field.size_eq) pos.toFin) $ Point.PlayerPoint player
-    , size_eq := by simp [field.size_eq]
+    , points := field.points.set pos.toFin $ Point.PlayerPoint player
     }
   else
-    sorry
+    let enemyPlayer := player.next
+    let inputPoints := field.getInputPoints pos player
+    let captures: List $ _ × _ := inputPoints.filterMap fun ⟨⟨chainPos, chainAdj⟩, ⟨capturedPos, _⟩⟩ =>
+      (field.buildChain pos chainPos chainAdj player).map fun chain => ⟨chain, (getInsideRing capturedPos chain).toList⟩
+    let capturedCount := List.length ∘ List.filter fun pos' => field.isPlayersPoint pos' enemyPlayer
+    let freedCount := List.length ∘ List.filter fun pos' => field.isCapturedPoint pos' player
+    let ⟨emptyCaptures, realCaptures⟩ := captures.partition fun ⟨_, captured⟩ => capturedCount captured == 0
+    let capturedTotal := Nat.sum $ realCaptures.map (capturedCount ·.snd)
+    let freedTotal := Nat.sum $ realCaptures.map (freedCount ·.snd)
+    if point == Point.EmptyBasePoint enemyPlayer then
+      let enemyEmptyBaseChain := field.getEmptyBaseChain pos enemyPlayer
+      let enemyEmptyBase := enemyEmptyBaseChain.elim Lean.HashSet.empty $ getInsideRing pos
+      if captures.isEmpty then
+        { scoreRed := if player == Player.red then field.scoreRed else field.scoreRed + 1
+        , scoreBlack := if player == Player.black then field.scoreBlack else field.scoreBlack + 1
+        , moves := newMoves
+        , points := let points₁ := field.points.set pos.toFin $ Point.PlayerPoint player
+                    let points₂ := enemyEmptyBase.fold (fun points pos' => points.set pos'.toFin $ Point.BasePoint enemyPlayer false) points₁
+                    points₂
+        }
+      else
+        sorry
+    else
+      sorry
