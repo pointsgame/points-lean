@@ -31,20 +31,20 @@ structure Field where
 
 namespace Field
 
-def cell (field: @Field width height) (pos: Pos width height): Point :=
+def point (field: @Field width height) (pos: Pos width height): Point :=
   field.points.get pos.toFin
 
 def isPuttingAllowed (field: @Field width height) (pos: Pos width height): Bool :=
-  (cell field pos).isPuttingAllowed
+  (point field pos).isPuttingAllowed
 
 def isPlayer (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
-  (cell field pos).isPlayer player
+  (point field pos).isPlayer player
 
 def isPlayersPoint (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
-  (cell field pos).isPlayersPoint player
+  (point field pos).isPlayersPoint player
 
 def isCapturedPoint (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
-  (cell field pos).isCapturedPoint player
+  (point field pos).isCapturedPoint player
 
 def emptyField: @Field width height :=
   { scoreRed := 0
@@ -213,7 +213,7 @@ def capture (player: Player) (point: Point): Point :=
   | Point.EmptyBasePoint _ => Point.BasePoint player false
 
 def putPoint (field: @Field width height) (pos: Pos width height) (player: Player) (_: isPuttingAllowed field pos = true): @Field width height :=
-  let point := field.cell pos
+  let point := field.point pos
   let newMoves := ⟨pos, player⟩ :: field.moves
   if point == Point.EmptyBasePoint player then
     { scoreRed := field.scoreRed
@@ -231,6 +231,7 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
     let ⟨emptyCaptures, realCaptures⟩ := captures.partition fun ⟨_, captured⟩ => capturedCount captured == 0
     let capturedTotal := Nat.sum $ realCaptures.map (capturedCount ·.snd)
     let freedTotal := Nat.sum $ realCaptures.map (freedCount ·.snd)
+    let realCaptured := realCaptures >>= (·.snd)
     if point == Point.EmptyBasePoint enemyPlayer then
       let enemyEmptyBaseChain := field.getEmptyBaseChain pos enemyPlayer
       let enemyEmptyBase := enemyEmptyBaseChain.elim Lean.HashSet.empty $ getInsideRing pos
@@ -243,6 +244,13 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
                     points₂
         }
       else
-        sorry
+        { scoreRed := if player == Player.red then field.scoreRed + capturedTotal else field.scoreRed - freedTotal
+        , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
+        , moves := newMoves
+        , points := let points₁ := field.points.set (Pos.toFin pos) $ Point.PlayerPoint player
+                    let points₂ := enemyEmptyBase.fold (fun points pos' => points.set (Pos.toFin pos') Point.EmptyPoint) points₁
+                    let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
+                    points₃
+        }
     else
       sorry
