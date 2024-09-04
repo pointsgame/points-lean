@@ -68,7 +68,6 @@ def wave [Monad m] (startPos: Pos width height) (f: Pos width height → m Bool)
           q := q.enqueue pos
     else
       break
-  return
 
 def wave' (startPos: Pos width height) (f: Pos width height → Bool): Lean.HashSet $ Pos width height :=
   let fState (pos: Pos width height): StateM (Lean.HashSet $ Pos width height) Bool := do
