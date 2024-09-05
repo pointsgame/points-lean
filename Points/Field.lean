@@ -261,3 +261,18 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
                   let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
                   points₃
       }
+
+instance: Repr $ @Field width height where
+  reprPrec field _ := Id.run do
+    let mut s := ""
+    for y in Fin.list height do
+      for x in Fin.list width do
+        s := s.push $ match field.point ⟨x, y⟩ with
+        | Point.PlayerPoint Player.red => 'X'
+        | Point.PlayerPoint Player.black => 'O'
+        | Point.BasePoint Player.red true => 'o'
+        | Point.BasePoint Player.black true => 'x'
+        | Point.BasePoint _ false => ','
+        | _ => '.'
+      s := s.push '\n'
+    return s
