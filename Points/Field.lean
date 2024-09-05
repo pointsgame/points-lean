@@ -241,8 +241,8 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
         { scoreRed := if player == Player.red then field.scoreRed else field.scoreRed + 1
         , scoreBlack := if player == Player.black then field.scoreBlack else field.scoreBlack + 1
         , moves := newMoves
-        , points := let points₁ := field.points.set pos.toFin $ Point.PlayerPoint player
-                    let points₂ := enemyEmptyBase.foldr (fun pos' points => points.set pos'.toFin $ Point.BasePoint enemyPlayer $ pos' == pos) points₁
+        , points := let points₁ := enemyEmptyBase.foldr (fun pos' points => points.set pos'.toFin $ Point.BasePoint enemyPlayer false) field.points
+                    let points₂ := points₁.set pos.toFin $ Point.BasePoint enemyPlayer true
                     points₂
         }
       else
