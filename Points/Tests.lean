@@ -183,17 +183,17 @@ def twoSurroundingsWithCommonDotOneBorderlineEmptyPlace := constructField "
   LSpec.test "move priority" (movePriority.elim false fun field => field.field.scoreRed == 0 && field.field.scoreBlack == 1) $
   LSpec.test "move priority, big" (movePriorityBig.elim false fun field => field.field.scoreRed == 0 && field.field.scoreBlack == 2) $
   LSpec.test "onion surroundings" (onionSurroundings.elim false fun field => field.field.scoreRed == 4 && field.field.scoreBlack == 0) $
-  LSpec.test "deep onion surroundings" (deepOnionSurroundings.elim false fun field => field.field.scoreRed == 0 && field.field.scoreBlack == 9)
-  -- applyControlSurroundingInSameTurn
-  -- doubleSurround
-  -- doubleSurroundWithEmptyPart
-  -- shouldNotLeaveEmptyInside
-  -- surroundInOppositeTurn
-  -- partlySurroundInOppositeTurn
-  -- holeInsideSurrounding
-  -- holeInsideSurroundingAfterOppositeTurnSurrounding
-  -- surroundingDoesNotExpand
-  -- twoSurroundingsWithCommonBorder
-  -- twoSurroundingsWithCommonDot
-  -- threeSurroundingsWithCommonBorders
-  -- twoSurroundingsWithCommonDotOneBorderlineEmptyPlace
+  LSpec.test "deep onion surroundings" (deepOnionSurroundings.elim false fun field => field.field.scoreRed == 0 && field.field.scoreBlack == 9) $
+  LSpec.test "apply 'control' surrounding in same turn" (applyControlSurroundingInSameTurn.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "double surround" (doubleSurround.elim false fun field => field.field.scoreRed == 2 && field.field.scoreBlack == 0) $
+  LSpec.test "double surround with empty part" (doubleSurroundWithEmptyPart.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "should not leave empty inside" (shouldNotLeaveEmptyInside.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "surround in opposite turn" (surroundInOppositeTurn.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "partly surround in opposite turn" (partlySurroundInOppositeTurn.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "a hole inside a surrounding" (holeInsideSurrounding.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "a hole inside a surrounding, after opposite turn surrounding" (holeInsideSurroundingAfterOppositeTurnSurrounding.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "surrounding does not expand" (surroundingDoesNotExpand.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "2 surroundings with common border" (twoSurroundingsWithCommonBorder.elim false fun field => field.field.scoreRed == 2 && field.field.scoreBlack == 0) $
+  LSpec.test "2 surroundings with common dot" (twoSurroundingsWithCommonDot.elim false fun field => field.field.scoreRed == 2 && field.field.scoreBlack == 0) $
+  LSpec.test "3 surroundings with common borders" (threeSurroundingsWithCommonBorders.elim false fun field => field.field.scoreRed == 3 && field.field.scoreBlack == 0) $
+  LSpec.test "2 surroundings with common dot, one borderline empty place" (twoSurroundingsWithCommonDotOneBorderlineEmptyPlace.elim false fun field => field.field.scoreRed == 2 && field.field.scoreBlack == 0)
