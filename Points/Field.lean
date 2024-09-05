@@ -35,16 +35,19 @@ def point (field: @Field width height) (pos: Pos width height): Point :=
   field.points.get pos.toFin
 
 def isPuttingAllowed (field: @Field width height) (pos: Pos width height): Bool :=
-  (point field pos).isPuttingAllowed
+  (field.point pos).isPuttingAllowed
 
 def isPlayer (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
-  (point field pos).isPlayer player
+  (field.point pos).isPlayer player
 
 def isPlayersPoint (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
-  (point field pos).isPlayersPoint player
+  (field.point pos).isPlayersPoint player
 
 def isCapturedPoint (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
-  (point field pos).isCapturedPoint player
+  (field.point pos).isCapturedPoint player
+
+def isEmptyBase (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
+  field.point pos == Point.EmptyBasePoint player
 
 def emptyField: @Field width height :=
   { scoreRed := 0
@@ -233,13 +236,13 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
     let realCaptured := realCaptures >>= (·.snd)
     if point == Point.EmptyBasePoint enemyPlayer then
       let enemyEmptyBaseChain := field.getEmptyBaseChain pos enemyPlayer
-      let enemyEmptyBase := enemyEmptyBaseChain.elim Lean.HashSet.empty $ getInsideRing pos
+      let enemyEmptyBase := (enemyEmptyBaseChain.elim Lean.HashSet.empty $ getInsideRing pos).toList.filter fun pos' => field.isEmptyBase pos' enemyPlayer
       if captures.isEmpty then
         { scoreRed := if player == Player.red then field.scoreRed else field.scoreRed + 1
         , scoreBlack := if player == Player.black then field.scoreBlack else field.scoreBlack + 1
         , moves := newMoves
         , points := let points₁ := field.points.set pos.toFin $ Point.PlayerPoint player
-                    let points₂ := enemyEmptyBase.fold (fun points pos' => points.set pos'.toFin $ Point.BasePoint enemyPlayer false) points₁
+                    let points₂ := enemyEmptyBase.foldr (fun pos' points => points.set pos'.toFin $ Point.BasePoint enemyPlayer $ pos' == pos) points₁
                     points₂
         }
       else
@@ -247,7 +250,7 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
         , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
         , moves := newMoves
         , points := let points₁ := field.points.set (Pos.toFin pos) $ Point.PlayerPoint player
-                    let points₂ := enemyEmptyBase.fold (fun points pos' => points.set (Pos.toFin pos') Point.EmptyPoint) points₁
+                    let points₂ := enemyEmptyBase.foldr (fun pos' points => points.set (Pos.toFin pos') Point.EmptyPoint) points₁
                     let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
                     points₃
         }
