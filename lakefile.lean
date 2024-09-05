@@ -9,6 +9,9 @@ require mathlib from git
 require batteries from git
   "https://github.com/leanprover-community/batteries" @ "v4.9.1"
 
+require LSpec from git
+  "https://github.com/argumentcomputer/LSpec" @ "8a51034d049c6a229d88dd62f490778a377eec06"
+
 package «points»
 
 @[default_target]
