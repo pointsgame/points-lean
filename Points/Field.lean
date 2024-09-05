@@ -252,4 +252,12 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
                     points₃
         }
     else
-      sorry
+      let newEmptyBase := (emptyCaptures >>= (·.snd)).filter fun pos' => field.point pos' == Point.EmptyPoint
+      { scoreRed := if player == Player.red then field.scoreRed + capturedTotal else field.scoreRed - freedTotal
+      , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
+      , moves := newMoves
+      , points := let points₁ := field.points.set (Pos.toFin pos) $ Point.PlayerPoint player
+                  let points₂ := newEmptyBase.foldr (fun pos' points => points.set (Pos.toFin pos') $ Point.EmptyBasePoint player) points₁
+                  let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
+                  points₃
+      }
