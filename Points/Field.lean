@@ -126,7 +126,7 @@ def buildChain (field: @Field width height) (startPos nextPos: Pos width height)
     let mut direction := Pos.rotate_not_adjacent $ Pos.direction inv.2.2
     repeat
       if let Option.some ⟨pos, adj⟩ := Pos.direction_to_pos direction inv.1 then
-        if field.isPlayer pos player then
+        if pos == startPos || field.isPlayer pos player then
           inv := ⟨inv.1, pos, adj⟩
           break
       direction := Pos.rotate direction
