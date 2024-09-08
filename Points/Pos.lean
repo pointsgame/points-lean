@@ -8,6 +8,7 @@ abbrev Pos (width height: Nat): Type :=
 
 namespace Pos
 
+@[macro_inline]
 def toFin (pos: Pos width height): Fin $ width * height :=
   finProdFinEquiv pos
 
@@ -65,43 +66,51 @@ theorem adjacent_to_top_right {pos₁ pos₂ pos₃: Pos width height} (adj_r: A
   exact adj_t.left ▸ adj_r.left
   exact adj_r.right ▸ Eq.symm adj_t.right
 
+@[macro_inline]
 def n (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentTop pos₁ pos₂ :=
   match pos₁ with
   | ⟨_, ⟨0, _⟩⟩ => Option.none
   | ⟨x, ⟨Nat.succ y, h⟩⟩ => Option.some ⟨⟨x, ⟨y, Nat.lt_of_succ_lt h⟩⟩, by apply And.intro; rfl; rfl⟩
 
+@[macro_inline]
 def s (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottom pos₁ pos₂ :=
   let y := ↑pos₁.snd.succ
   if h: y < height
   then Option.some ⟨⟨pos₁.fst, ⟨y, h⟩⟩, by apply And.intro; rfl; rfl⟩
   else Option.none
 
+@[macro_inline]
 def w (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentLeft pos₁ pos₂ :=
   match pos₁ with
   | ⟨⟨0, _⟩, _⟩ => Option.none
   | ⟨⟨Nat.succ x, h⟩, y⟩ => Option.some ⟨⟨⟨x, Nat.lt_of_succ_lt h⟩, y⟩, by apply And.intro; rfl; rfl⟩
 
+@[macro_inline]
 def e (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentRight pos₁ pos₂ :=
   let x := ↑pos₁.fst.succ
   if h: x < width
   then Option.some ⟨⟨⟨x, h⟩, pos₁.snd⟩, by apply And.intro; rfl; rfl⟩
   else Option.none
 
+@[macro_inline]
 def nw (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentTopLeft pos₁ pos₂ := do
   let ⟨npos, adj₁⟩ ← n pos₁
   let ⟨nwpos, adj₂⟩ ← w npos
   return ⟨nwpos, adjacent_to_bottom_right adj₂ adj₁⟩
 
+@[macro_inline]
 def ne (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentTopRight pos₁ pos₂ := do
   let ⟨epos, adj₁⟩ ← e pos₁
   let ⟨nepos, adj₂⟩ ← n epos
   return ⟨nepos, adjacent_to_top_right adj₁ adj₂⟩
 
+@[macro_inline]
 def sw (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottomLeft pos₁ pos₂ := do
   let ⟨spos, adj₁⟩ ← s pos₁
   let ⟨swpos, adj₂⟩ ← w spos
   return ⟨swpos, adjacent_to_top_right adj₂ adj₁⟩
 
+@[macro_inline]
 def se (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottomRight pos₁ pos₂ := do
   let ⟨epos, adj₁⟩ ← e pos₁
   let ⟨sepos, adj₂⟩ ← s epos
@@ -110,48 +119,56 @@ def se (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottomRight pos�
 instance adjacent_top: Coe (AdjacentTop pos₁ pos₂) (Adjacent pos₁ pos₂) where
   coe := .inr ∘ .inr ∘ .inr ∘ .inl
 
+@[macro_inline]
 def n' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (n pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
 
 instance adjacent_bottom: Coe (AdjacentBottom pos₁ pos₂) (Adjacent pos₁ pos₂) where
   coe := .inr ∘ .inr ∘ .inl
 
+@[macro_inline]
 def s' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (s pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
 
 instance adjacent_left: Coe (AdjacentLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
   coe := .inr ∘ .inl
 
+@[macro_inline]
 def w' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (w pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
 
 instance adjacent_right: Coe (AdjacentRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
   coe := .inl
 
+@[macro_inline]
 def e' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (e pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
 
 instance adjacent_top_left: Coe (AdjacentTopLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
    coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
 
+@[macro_inline]
 def nw' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (nw pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
 
 instance adjacent_top_right: Coe (AdjacentTopRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
    coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
 
+@[macro_inline]
 def ne' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (ne pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
 
 instance adjacent_bottom_left: Coe (AdjacentBottomLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
   coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr
 
+@[macro_inline]
 def sw' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (sw pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
 
 instance adjacent_bottom_right: Coe (AdjacentBottomRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
   coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
 
+@[macro_inline]
 def se' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   (se pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
 
@@ -167,6 +184,7 @@ inductive Direction where
 
 open Direction
 
+@[macro_inline]
 def inverse: Direction → Direction
   | dir_right => dir_left
   | dir_bottom_right => dir_top_left
@@ -177,6 +195,7 @@ def inverse: Direction → Direction
   | dir_top => dir_bottom
   | dir_top_right => dir_bottom_left
 
+@[macro_inline]
 def rotate: Direction → Direction
   | dir_right => dir_bottom_right
   | dir_bottom_right => dir_bottom
@@ -187,6 +206,7 @@ def rotate: Direction → Direction
   | dir_top => dir_top_right
   | dir_top_right => dir_right
 
+@[macro_inline]
 def rotate_not_adjacent: Direction → Direction
   | dir_right => dir_bottom_left
   | dir_bottom_right => dir_bottom_left
@@ -197,6 +217,7 @@ def rotate_not_adjacent: Direction → Direction
   | dir_top => dir_bottom_right
   | dir_top_right => dir_bottom_right
 
+@[macro_inline]
 def direction {pos₁ pos₂: Pos width height} (adj: Adjacent pos₁ pos₂): Direction :=
   if h₁: AdjacentRight pos₁ pos₂ then
     dir_right
@@ -238,6 +259,7 @@ def direction {pos₁ pos₂: Pos width height} (adj: Adjacent pos₁ pos₂): D
                   . exact (absurd · h₇)
                   . exact (absurd · h₈)
 
+@[macro_inline]
 def direction_to_pos (dir: Direction): (pos₁: Pos width height) → Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
   match dir with
   | dir_right => e'
