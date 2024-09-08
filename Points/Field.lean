@@ -58,7 +58,7 @@ def emptyField: @Field width height :=
 
 def wave [Monad m] (startPos: Pos width height) (f: Pos width height → m Bool): m Unit := do
   let neighborhood (pos: Pos width height): List $ Pos width height :=
-    [pos.n', pos.s', pos.w', pos.e'].filterMap (·.map (·.fst))
+    [pos.n', pos.s', pos.w', pos.e'].filterMap (·.map (·.1))
   unless ← f startPos do
     return
   let mut q := Std.Queue.empty
@@ -80,7 +80,7 @@ def wave' (startPos: Pos width height) (f: Pos width height → Bool): Lean.Hash
       return true
     else
       return false
-  (StateT.run (wave startPos fState) Lean.HashSet.empty).snd
+  (StateT.run (wave startPos fState) Lean.HashSet.empty).2
 
 def getInputPoints (field: @Field width height) (pos: Pos width height) (player: Player): List $ (Σ' chainPos, Pos.Adjacent pos chainPos) × (Σ' capturedPos, Pos.Adjacent pos capturedPos) :=
   let isDirectionPlayer (dir: (pos₁: Pos width height) → Option $ Σ' pos₂, Pos.Adjacent pos₁ pos₂): Bool :=
@@ -151,8 +151,8 @@ inductive IntersectionState where
 deriving BEq, Hashable, Repr, Inhabited
 
 def getIntersectionState (pos: Pos width height) (nextPos: Pos width height): IntersectionState :=
-  if nextPos.fst <= pos.fst
-  then match Int.ofNat nextPos.snd - Int.ofNat pos.snd with
+  if nextPos.1 <= pos.1
+  then match Int.ofNat nextPos.2 - Int.ofNat pos.2 with
        | 1 => IntersectionState.Up
        | 0 => IntersectionState.Target
        | -1 => IntersectionState.Down
@@ -191,7 +191,7 @@ def getEmptyBaseChain (field: @Field width height) (startPos: Pos width height) 
   let mut pos := startPos
   repeat
     if let Option.some pos' := pos.w then
-      pos := pos'.fst
+      pos := pos'.1
     else
       break
     if field.isPlayer pos player then
@@ -231,9 +231,9 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
     let capturedCount := List.length ∘ List.filter fun pos' => field.isPlayersPoint pos' enemyPlayer
     let freedCount := List.length ∘ List.filter fun pos' => field.isCapturedPoint pos' player
     let ⟨emptyCaptures, realCaptures⟩ := captures.partition fun ⟨_, captured⟩ => capturedCount captured == 0
-    let capturedTotal := Nat.sum $ realCaptures.map (capturedCount ·.snd)
-    let freedTotal := Nat.sum $ realCaptures.map (freedCount ·.snd)
-    let realCaptured := realCaptures >>= (·.snd)
+    let capturedTotal := Nat.sum $ realCaptures.map (capturedCount ·.2)
+    let freedTotal := Nat.sum $ realCaptures.map (freedCount ·.2)
+    let realCaptured := realCaptures >>= (·.2)
     if point == Point.EmptyBasePoint enemyPlayer then
       let enemyEmptyBaseChain := field.getEmptyBaseChain pos enemyPlayer
       let enemyEmptyBase := (enemyEmptyBaseChain.elim Lean.HashSet.empty $ getInsideRing pos).toList.filter fun pos' => field.isEmptyBase pos' enemyPlayer
@@ -255,7 +255,7 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
                     points₃
         }
     else
-      let newEmptyBase := (emptyCaptures >>= (·.snd)).filter fun pos' => field.point pos' == Point.EmptyPoint
+      let newEmptyBase := (emptyCaptures >>= (·.2)).filter fun pos' => field.point pos' == Point.EmptyPoint
       { scoreRed := if player == Player.red then field.scoreRed + capturedTotal else field.scoreRed - freedTotal
       , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
       , moves := newMoves
@@ -264,6 +264,22 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
                   let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
                   points₃
       }
+
+def lastPlayer (field: @Field width height): Option Player :=
+  field.moves.head?.map (·.2)
+
+def nextPlayer (field: @Field width height): Player :=
+  ((lastPlayer field).map Player.next).getD Player.red
+
+def putNextPoint (field: @Field width height) (pos: Pos width height): isPuttingAllowed field pos = true → @Field width height :=
+  field.putPoint pos field.nextPlayer
+
+def winner (field: @Field width height): Option Player :=
+  if field.scoreBlack < field.scoreRed
+  then Option.some Player.red
+  else if field.scoreRed < field.scoreBlack
+  then Option.some Player.black
+  else Option.none
 
 instance: Repr $ @Field width height where
   reprPrec field _ := Id.run do
