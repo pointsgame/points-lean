@@ -45,10 +45,12 @@ def randomGamesResult (games width height: Nat): Rand Result := do
   return { red, black }
 
 def runBench (p: Parsed): IO UInt32 := do
-  let width := p.flag! "width" |>.as! Nat
-  let height := p.flag! "height" |>.as! Nat
-  let games := p.flag! "games-number" |>.as! Nat
-  let seed := p.flag! "seed" |>.as! Nat
+  let exit := do p.printHelp
+                 @IO.Process.exit Nat 0
+  let width ← (p.flag? "width" >>= (·.as? Nat)).elim exit pure
+  let height ← (p.flag? "height" >>= (·.as? Nat)).elim exit pure
+  let games ← (p.flag? "games-number" >>= (·.as? Nat)).elim exit pure
+  let seed ← (p.flag? "seed" >>= (·.as? Nat)).elim exit pure
   let result := IO.runRandWith seed $ randomGamesResult games width height
   IO.println s!"{result.red}:{result.black}"
   return 0
