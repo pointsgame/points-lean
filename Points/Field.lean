@@ -31,21 +31,27 @@ structure Field where
 
 namespace Field
 
+@[macro_inline]
 def point (field: @Field width height) (pos: Pos width height): Point :=
   field.points.get pos.toFin
 
+@[macro_inline]
 def isPuttingAllowed (field: @Field width height) (pos: Pos width height): Bool :=
   (field.point pos).isPuttingAllowed
 
+@[macro_inline]
 def isPlayer (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
   (field.point pos).isPlayer player
 
+@[macro_inline]
 def isPlayersPoint (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
   (field.point pos).isPlayersPoint player
 
+@[macro_inline]
 def isCapturedPoint (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
   (field.point pos).isCapturedPoint player
 
+@[macro_inline]
 def isEmptyBase (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
   field.point pos == Point.EmptyBasePoint player
 
@@ -111,6 +117,7 @@ def getInputPoints (field: @Field width height) (pos: Pos width height) (player:
                 list₃
   list₄
 
+@[macro_inline]
 def skewProduct (pos₁: Pos width height) (pos₂: Pos width height): Int :=
   match pos₁, pos₂ with
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => Int.ofNat x₁ * Int.ofNat y₂ - Int.ofNat y₁ * Int.ofNat x₂
@@ -265,15 +272,19 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
                   points₃
       }
 
+@[macro_inline]
 def lastPlayer (field: @Field width height): Option Player :=
   field.moves.head?.map (·.2)
 
+@[macro_inline]
 def nextPlayer (field: @Field width height): Player :=
   ((lastPlayer field).map Player.next).getD Player.red
 
+@[macro_inline]
 def putNextPoint (field: @Field width height) (pos: Pos width height): isPuttingAllowed field pos = true → @Field width height :=
   field.putPoint pos field.nextPlayer
 
+@[macro_inline]
 def winner (field: @Field width height): Option Player :=
   if field.scoreBlack < field.scoreRed
   then Option.some Player.red
