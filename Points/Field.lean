@@ -53,7 +53,7 @@ def isCapturedPoint (field: @Field width height) (pos: Pos width height) (player
 
 @[macro_inline]
 def isEmptyBase (field: @Field width height) (pos: Pos width height) (player: Player): Bool :=
-  field.point pos == Point.EmptyBasePoint player
+  (field.point pos).isEmptyBase player
 
 def emptyField: @Field width height :=
   { scoreRed := 0
