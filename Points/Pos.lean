@@ -36,25 +36,25 @@ abbrev AdjacentTopLeft (pos₁ pos₂: Pos width height): Prop :=
 abbrev AdjacentBottomLeft (pos₁ pos₂: Pos width height): Prop :=
   AdjacentTopRight pos₂ pos₁
 
-abbrev Adjacent (pos₁ pos₂: Pos width height): Prop :=
-  AdjacentRight pos₁ pos₂ ∨
-  AdjacentLeft pos₁ pos₂ ∨
-  AdjacentBottom pos₁ pos₂ ∨
-  AdjacentTop pos₁ pos₂ ∨
-  AdjacentBottomRight pos₁ pos₂ ∨
-  AdjacentTopLeft pos₁ pos₂ ∨
-  AdjacentTopRight pos₁ pos₂ ∨
-  AdjacentBottomLeft pos₁ pos₂
+inductive Adjacent (pos₁ pos₂: Pos width height): Sort
+  | adj_right: AdjacentRight pos₁ pos₂ → Adjacent pos₁ pos₂
+  | adj_left: AdjacentLeft pos₁ pos₂ → Adjacent pos₁ pos₂
+  | adj_bottom: AdjacentBottom pos₁ pos₂ → Adjacent pos₁ pos₂
+  | adj_top: AdjacentTop pos₁ pos₂ → Adjacent pos₁ pos₂
+  | adj_bottom_right: AdjacentBottomRight pos₁ pos₂ → Adjacent pos₁ pos₂
+  | adj_top_left : AdjacentTopLeft pos₁ pos₂ → Adjacent pos₁ pos₂
+  | adj_top_right: AdjacentTopRight pos₁ pos₂ → Adjacent pos₁ pos₂
+  | adj_bottom_left: AdjacentBottomLeft pos₁ pos₂ → Adjacent pos₁ pos₂
 
 theorem adjacent_symm: Adjacent pos₁ pos₂ → Adjacent pos₂ pos₁
-  | Or.inl adj => Or.inr $ Or.inl adj
-  | Or.inr $ Or.inl adj => Or.inl adj
-  | Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inr $ Or.inl adj
-  | Or.inr $ Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inl adj
-  | Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj
-  | Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj
-  | Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj => Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr adj
-  | Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr adj => Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inr $ Or.inl adj
+  | Adjacent.adj_right adj => Adjacent.adj_left adj
+  | Adjacent.adj_left adj => Adjacent.adj_right adj
+  | Adjacent.adj_bottom adj => Adjacent.adj_top adj
+  | Adjacent.adj_top adj => Adjacent.adj_bottom adj
+  | Adjacent.adj_bottom_right adj => Adjacent.adj_top_left adj
+  | Adjacent.adj_top_left adj => Adjacent.adj_bottom_right adj
+  | Adjacent.adj_top_right adj => Adjacent.adj_bottom_left adj
+  | Adjacent.adj_bottom_left adj => Adjacent.adj_top_right adj
 
 theorem adjacent_to_bottom_right (adj_r: AdjacentRight pos₁ pos₂) (adj_b: AdjacentBottom pos₂ pos₃): AdjacentBottomRight pos₁ pos₃ := by
   apply And.intro
@@ -116,61 +116,37 @@ def se (pos₁: Pos width height): Option $ Σ' pos₂, AdjacentBottomRight pos�
   let ⟨sepos, adj₂⟩ ← s epos
   return ⟨sepos, adjacent_to_bottom_right adj₁ adj₂⟩
 
-instance adjacent_top: Coe (AdjacentTop pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inr ∘ .inl
-
 @[macro_inline]
 def n' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
-  (n pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
-
-instance adjacent_bottom: Coe (AdjacentBottom pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inl
+  (n pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, Adjacent.adj_top adj⟩
 
 @[macro_inline]
 def s' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
-  (s pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
-
-instance adjacent_left: Coe (AdjacentLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inl
+  (s pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, Adjacent.adj_bottom adj⟩
 
 @[macro_inline]
 def w' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
-  (w pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
-
-instance adjacent_right: Coe (AdjacentRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inl
+  (w pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, Adjacent.adj_left adj⟩
 
 @[macro_inline]
 def e' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
-  (e pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
-
-instance adjacent_top_left: Coe (AdjacentTopLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
-   coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
+  (e pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, Adjacent.adj_right adj⟩
 
 @[macro_inline]
 def nw' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
-  (nw pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
-
-instance adjacent_top_right: Coe (AdjacentTopRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
-   coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
+  (nw pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, Adjacent.adj_top_left adj⟩
 
 @[macro_inline]
 def ne' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
-  (ne pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
-
-instance adjacent_bottom_left: Coe (AdjacentBottomLeft pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inr
+  (ne pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, Adjacent.adj_top_right adj⟩
 
 @[macro_inline]
 def sw' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
-  (sw pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
-
-instance adjacent_bottom_right: Coe (AdjacentBottomRight pos₁ pos₂) (Adjacent pos₁ pos₂) where
-  coe := .inr ∘ .inr ∘ .inr ∘ .inr ∘ .inl
+  (sw pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, Adjacent.adj_bottom_left adj⟩
 
 @[macro_inline]
 def se' (pos₁: Pos width height): Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
-  (se pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, ↑adj⟩
+  (se pos₁).map fun ⟨pos₂, adj⟩ => ⟨pos₂, Adjacent.adj_bottom_right adj⟩
 
 inductive Direction where
   | dir_right: Direction
@@ -236,28 +212,15 @@ def direction {pos₁ pos₂: Pos width height} (adj: Adjacent pos₁ pos₂): D
   else if h₈: AdjacentBottomLeft pos₁ pos₂ then
     dir_bottom_left
   else
-    False.elim <| by
-      apply Or.elim adj
-      . exact (absurd · h₁)
-      . intro h
-        apply Or.elim h
-        . exact (absurd · h₂)
-        . intro h
-          apply Or.elim h
-          . exact (absurd · h₃)
-          . intro h
-            apply Or.elim h
-            . exact (absurd · h₄)
-            . intro h
-              apply Or.elim h
-              . exact (absurd · h₅)
-              . intro h
-                apply Or.elim h
-                . exact (absurd · h₆)
-                . intro h
-                  apply Or.elim h
-                  . exact (absurd · h₇)
-                  . exact (absurd · h₈)
+    False.elim <| by cases adj with
+      | adj_right adj => exact absurd adj h₁
+      | adj_left adj => exact absurd adj h₂
+      | adj_bottom adj => exact absurd adj h₃
+      | adj_top adj => exact absurd adj h₄
+      | adj_bottom_right adj => exact absurd adj h₅
+      | adj_top_left adj => exact absurd adj h₆
+      | adj_top_right adj => exact absurd adj h₇
+      | adj_bottom_left adj => exact absurd adj h₈
 
 @[macro_inline]
 def direction_to_pos (dir: Direction): (pos₁: Pos width height) → Option $ Σ' pos₂, Adjacent pos₁ pos₂ :=
