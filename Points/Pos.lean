@@ -24,19 +24,19 @@ abbrev AdjacentBottomRight: Pos width height → Pos width height → Prop
 abbrev AdjacentTopRight: Pos width height → Pos width height → Prop
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => x₁.succ = x₂.castSucc ∧ y₁.castSucc = y₂.succ
 
-abbrev AdjacentLeft (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
+abbrev AdjacentLeft (pos₁ pos₂: Pos width height): Prop :=
   AdjacentRight pos₂ pos₁
 
-abbrev AdjacentTop (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
+abbrev AdjacentTop (pos₁ pos₂: Pos width height): Prop :=
   AdjacentBottom pos₂ pos₁
 
-abbrev AdjacentTopLeft (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
+abbrev AdjacentTopLeft (pos₁ pos₂: Pos width height): Prop :=
   AdjacentBottomRight pos₂ pos₁
 
-abbrev AdjacentBottomLeft (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
+abbrev AdjacentBottomLeft (pos₁ pos₂: Pos width height): Prop :=
   AdjacentTopRight pos₂ pos₁
 
-abbrev Adjacent (pos₁: Pos width height) (pos₂: Pos width height): Prop :=
+abbrev Adjacent (pos₁ pos₂: Pos width height): Prop :=
   AdjacentRight pos₁ pos₂ ∨
   AdjacentLeft pos₁ pos₂ ∨
   AdjacentBottom pos₁ pos₂ ∨
