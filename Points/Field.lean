@@ -27,6 +27,8 @@ structure Field where
   scoreRed: Nat
   scoreBlack: Nat
   moves: List $ Pos width height × Player
+  lastSurroundChains: List $ NonEmptyList $ Pos width height
+  lastSurroundPlayer: Player
   points: Vector Point $ width * height
 
 namespace Field
@@ -59,6 +61,8 @@ def emptyField: @Field width height :=
   { scoreRed := 0
   , scoreBlack := 0
   , moves := []
+  , lastSurroundChains := []
+  , lastSurroundPlayer := Player.red
   , points := Vector.mk (mkArray (width * height) Point.EmptyPoint) $ Array.size_mkArray ..
   }
 
@@ -228,6 +232,8 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
     { scoreRed := field.scoreRed
     , scoreBlack := field.scoreBlack
     , moves := newMoves
+    , lastSurroundChains := []
+    , lastSurroundPlayer := player
     , points := field.points.set pos.toFin $ Point.PlayerPoint player
     }
   else
@@ -248,6 +254,8 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
         { scoreRed := if player == Player.red then field.scoreRed else field.scoreRed + 1
         , scoreBlack := if player == Player.black then field.scoreBlack else field.scoreBlack + 1
         , moves := newMoves
+        , lastSurroundChains := enemyEmptyBaseChain.toList
+        , lastSurroundPlayer := enemyPlayer
         , points := let points₁ := enemyEmptyBase.foldr (fun pos' points => points.set pos'.toFin $ Point.BasePoint enemyPlayer false) field.points
                     let points₂ := points₁.set pos.toFin $ Point.BasePoint enemyPlayer true
                     points₂
@@ -256,6 +264,8 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
         { scoreRed := if player == Player.red then field.scoreRed + capturedTotal else field.scoreRed - freedTotal
         , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
         , moves := newMoves
+        , lastSurroundChains := realCaptures.map (·.1)
+        , lastSurroundPlayer := player
         , points := let points₁ := field.points.set (Pos.toFin pos) $ Point.PlayerPoint player
                     let points₂ := enemyEmptyBase.foldr (fun pos' points => points.set (Pos.toFin pos') Point.EmptyPoint) points₁
                     let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
@@ -266,6 +276,8 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
       { scoreRed := if player == Player.red then field.scoreRed + capturedTotal else field.scoreRed - freedTotal
       , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
       , moves := newMoves
+      , lastSurroundChains := realCaptures.map (·.1)
+      , lastSurroundPlayer := player
       , points := let points₁ := field.points.set (Pos.toFin pos) $ Point.PlayerPoint player
                   let points₂ := newEmptyBase.foldr (fun pos' points => points.set (Pos.toFin pos') $ Point.EmptyBasePoint player) points₁
                   let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
