@@ -9,6 +9,11 @@ structure NonEmptyList (a: Type) where
   list: List a
   nonEmpty: list ≠ []
 
+namespace NonEmptyList
+  def cons (list: NonEmptyList a) (element: a): NonEmptyList a :=
+    NonEmptyList.mk (element :: list.list) (List.cons_ne_nil element list.list)
+end NonEmptyList
+
 -- TODO: use Vector from Batteries when it's available in release
 structure Vector (a: Type) (n: Nat) where
   mk ::
@@ -127,15 +132,15 @@ def skewProduct (pos₁: Pos width height) (pos₂: Pos width height): Int :=
   | ⟨x₁, y₁⟩, ⟨x₂, y₂⟩ => Int.ofNat x₁ * Int.ofNat y₂ - Int.ofNat y₁ * Int.ofNat x₂
 
 def buildChain (field: @Field width height) (startPos nextPos: Pos width height) (adj: Pos.Adjacent startPos nextPos) (player: Player): Option $ NonEmptyList $ Pos width height := Id.run do
-  let mut chain := [startPos]
+  let mut chain := NonEmptyList.mk [startPos] nofun
   -- ⟨centerPos, pos, adj⟩
   let mut inv: Σ' pos₁ pos₂, Pos.Adjacent pos₁ pos₂ := ⟨startPos, nextPos, adj⟩
   let mut square := skewProduct startPos nextPos
   repeat
-    if chain.contains inv.2.1 then
-      chain := chain.dropWhile (· != inv.2.1)
-    else
-      chain := inv.2.1 :: chain
+    let chain' := chain.list.dropWhile (· != inv.2.1)
+    if h: ¬ chain' = [] then
+      chain := NonEmptyList.mk chain' h
+    chain := chain.cons inv.2.1
     inv := ⟨inv.2.1, inv.1, Pos.adjacent_symm inv.2.2⟩
     let mut direction := Pos.rotate_not_adjacent $ Pos.direction inv.2.2
     repeat
@@ -148,10 +153,7 @@ def buildChain (field: @Field width height) (startPos nextPos: Pos width height)
     if inv.2.1 = startPos then
       break
   if square < 0
-  then
-    if h: chain.length > 2
-    then Option.some $ NonEmptyList.mk chain $ List.length_pos.mp $ Nat.zero_lt_of_lt h
-    else Option.none
+  then Option.some chain
   else Option.none
 
 inductive IntersectionState where
