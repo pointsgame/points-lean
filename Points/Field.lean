@@ -1,3 +1,4 @@
+import Batteries.Data.Vector
 import Points.Pos
 import Points.Player
 import Points.Point
@@ -13,20 +14,6 @@ namespace NonEmptyList
   def cons (list: NonEmptyList a) (element: a): NonEmptyList a :=
     NonEmptyList.mk (element :: list.list) (List.cons_ne_nil element list.list)
 end NonEmptyList
-
--- TODO: use Vector from Batteries when it's available in release
-structure Vector (a: Type) (n: Nat) where
-  mk ::
-  array: Array a
-  size_eq: array.size = n
-
-namespace Vector
-  def get (vector: Vector a n) (i: Fin n): a :=
-    vector.array.get <| i.cast vector.size_eq.symm
-
-  def set (vector: Vector a n) (i: Fin n) (x: a): Vector a n :=
-    ⟨vector.array.set (Fin.cast vector.size_eq.symm i) x, by simp [vector.size_eq]⟩
-end Vector
 
 structure Field where
   scoreRed: Nat
@@ -87,15 +74,15 @@ def wave [Monad m] (startPos: Pos width height) (f: Pos width height → m Bool)
     else
       break
 
-def wave' (startPos: Pos width height) (f: Pos width height → Bool): Lean.HashSet $ Pos width height :=
-  let fState (pos: Pos width height): StateM (Lean.HashSet $ Pos width height) Bool := do
+def wave' (startPos: Pos width height) (f: Pos width height → Bool): Std.HashSet $ Pos width height :=
+  let fState (pos: Pos width height): StateM (Std.HashSet $ Pos width height) Bool := do
     let passed ← StateT.get
     if !passed.contains pos && f pos then
       StateT.set $ passed.insert pos
       return true
     else
       return false
-  (StateT.run (wave startPos fState) Lean.HashSet.empty).2
+  (StateT.run (wave startPos fState) Std.HashSet.empty).2
 
 def getInputPoints (field: @Field width height) (pos: Pos width height) (player: Player): List $ (Σ' chainPos, Pos.Adjacent pos chainPos) × (Σ' capturedPos, Pos.Adjacent pos capturedPos) :=
   let isDirectionPlayer (dir: (pos₁: Pos width height) → Option $ Σ' pos₂, Pos.Adjacent pos₁ pos₂): Bool :=
@@ -196,8 +183,8 @@ def posInsideRing (pos: Pos width height) (ring: NonEmptyList $ Pos width height
       intersections := intersections + 1
   intersections % 2 == 1
 
-def getInsideRing (pos: Pos width height) (ring: NonEmptyList $ Pos width height): Lean.HashSet $ Pos width height :=
-  let ringSet := Lean.HashSet.ofList ring.list
+def getInsideRing (pos: Pos width height) (ring: NonEmptyList $ Pos width height): Std.HashSet $ Pos width height :=
+  let ringSet := Std.HashSet.ofList ring.list
   wave' pos (!ringSet.contains ·)
 
 def getEmptyBaseChain (field: @Field width height) (startPos: Pos width height) (player: Player): Option $ NonEmptyList $ Pos width height := Id.run do
@@ -246,12 +233,12 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
     let capturedCount := List.length ∘ List.filter fun pos' => field.isPlayersPoint pos' enemyPlayer
     let freedCount := List.length ∘ List.filter fun pos' => field.isCapturedPoint pos' player
     let ⟨emptyCaptures, realCaptures⟩ := captures.partition fun ⟨_, captured⟩ => capturedCount captured == 0
-    let capturedTotal := Nat.sum $ realCaptures.map (capturedCount ·.2)
-    let freedTotal := Nat.sum $ realCaptures.map (freedCount ·.2)
-    let realCaptured := realCaptures >>= (·.2)
+    let capturedTotal := List.sum $ realCaptures.map (capturedCount ·.2)
+    let freedTotal := List.sum $ realCaptures.map (freedCount ·.2)
+    let realCaptured := realCaptures.flatMap (·.2)
     if point == Point.EmptyBasePoint enemyPlayer then
       let enemyEmptyBaseChain := field.getEmptyBaseChain pos enemyPlayer
-      let enemyEmptyBase := (enemyEmptyBaseChain.elim Lean.HashSet.empty $ getInsideRing pos).toList.filter fun pos' => field.isEmptyBase pos' enemyPlayer
+      let enemyEmptyBase := (enemyEmptyBaseChain.elim Std.HashSet.empty $ getInsideRing pos).toList.filter fun pos' => field.isEmptyBase pos' enemyPlayer
       if captures.isEmpty then
         { scoreRed := if player == Player.red then field.scoreRed else field.scoreRed + 1
         , scoreBlack := if player == Player.black then field.scoreBlack else field.scoreBlack + 1
@@ -274,7 +261,7 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
                     points₃
         }
     else
-      let newEmptyBase := (emptyCaptures >>= (·.2)).filter fun pos' => field.point pos' == Point.EmptyPoint
+      let newEmptyBase := (emptyCaptures.flatMap (·.2)).filter fun pos' => field.point pos' == Point.EmptyPoint
       { scoreRed := if player == Player.red then field.scoreRed + capturedTotal else field.scoreRed - freedTotal
       , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
       , moves := newMoves
@@ -309,8 +296,8 @@ def winner (field: @Field width height): Option Player :=
 instance: Repr $ @Field width height where
   reprPrec field _ := Id.run do
     let mut s := ""
-    for y in Fin.list height do
-      for x in Fin.list width do
+    for y in List.finRange height do
+      for x in List.finRange width do
         s := s.push $ match field.point ⟨x, y⟩ with
         | Point.PlayerPoint Player.red => 'X'
         | Point.PlayerPoint Player.black => 'O'

@@ -4,16 +4,16 @@ open Lake DSL
 
 -- MATHLIB_NO_CACHE_ON_UPDATE=1 lake update
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4" @ "v4.9.1"
+  "https://github.com/leanprover-community/mathlib4" @ "v4.17.0"
 
 require batteries from git
-  "https://github.com/leanprover-community/batteries" @ "v4.9.1"
+  "https://github.com/leanprover-community/batteries" @ "v4.17.0"
 
 require LSpec from git
-  "https://github.com/argumentcomputer/LSpec" @ "8a51034d049c6a229d88dd62f490778a377eec06"
+  "https://github.com/argumentcomputer/LSpec" @ "0f9008e70927c4afac8ad2bc32f2f4fbda044096"
 
 require Cli from git
-  "https://github.com/leanprover/lean4-cli" @ "2cf1030dc2ae6b3632c84a09350b675ef3e347d0"
+  "https://github.com/leanprover/lean4-cli" @ "e7fd1a415c80985ade02a021172834ca2139b0ca"
 
 package «points»
 

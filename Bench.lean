@@ -7,15 +7,15 @@ import Cli
 
 open Cli
 
-def allMoves (width height: Nat): List $ Pos width height := do
-  let y ← Fin.list height
-  let x ← Fin.list width
-  return ⟨x, y⟩
+def allMoves (width height: Nat): List $ Pos width height :=
+  (List.finRange height).flatMap fun y =>
+    (List.finRange width).map fun x =>
+      ⟨x, y⟩
 
 def shuffle (array: Array a): Rand $ Array a := do
   let mut inv: Σ' arr: Array a, array.size = arr.size := ⟨array, rfl⟩
-  for i in Fin.list array.size do
-    let j ← (Random.randFin (n := array.size - 1)).map $ Fin.cast $ Nat.sub_one_add_one_eq_of_pos i.size_pos
+  for i in List.finRange array.size do
+    let j ← (Random.randFin (n := array.size - 1)).map $ Fin.cast $ Nat.sub_one_add_one_eq_of_pos i.pos
     inv := ⟨inv.1.swap (Fin.cast inv.2 i) (Fin.cast inv.2 j), by simp [inv.2]⟩
   return inv.1
 
