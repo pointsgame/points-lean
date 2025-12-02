@@ -16,10 +16,10 @@ def constructField (image: String): Option GenField :=
   | lines@(h :: _) => Id.run do
     let width := h.length
     let height := lines.length
-    let moves: List $ Char × Pos width height := do
-      let ⟨line, y⟩ ← lines.zip (Fin.list height)
-      let ⟨c, x⟩ ← line.toList.zip (Fin.list width)
-      return ⟨c, ⟨x, y⟩⟩
+    let moves: List $ Char × Pos width height :=
+      (lines.zip (List.finRange height)).flatMap fun ⟨line, y⟩ =>
+        (line.toList.zip (List.finRange width)).map fun ⟨c, x⟩ =>
+          ⟨c, ⟨x, y⟩⟩
     let moves := moves.filter fun ⟨c, _⟩ => c.toLower != c.toUpper
     let moves := moves.toArray.qsort (·.fst < ·.fst)
     let moves: Array (Pos width height × Player) := moves.map fun ⟨c, pos⟩ => ⟨pos, if c.isLower then Player.red else Player.black⟩
