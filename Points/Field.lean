@@ -1,4 +1,5 @@
 import Batteries.Data.Vector
+import Init.Data.Array.QSort
 import Points.Pos
 import Points.Player
 import Points.Point
@@ -218,9 +219,8 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
   let point := field.point pos
   let newMoves := ⟨pos, player⟩ :: field.moves
   if point == Point.EmptyBasePoint player then
-    { scoreRed := field.scoreRed
-    , scoreBlack := field.scoreBlack
-    , moves := newMoves
+    { field with
+      moves := newMoves
     , lastSurroundChains := []
     , lastSurroundPlayer := player
     , points := field.points.set pos.toFin $ Point.PlayerPoint player
@@ -228,49 +228,50 @@ def putPoint (field: @Field width height) (pos: Pos width height) (player: Playe
   else
     let enemyPlayer := player.next
     let inputPoints := field.getInputPoints pos player
-    let captures: List $ _ × _ := inputPoints.filterMap fun ⟨⟨chainPos, chainAdj⟩, ⟨capturedPos, _⟩⟩ =>
-      (field.buildChain pos chainPos chainAdj player).map fun chain => ⟨chain, (getInsideRing capturedPos chain).toList⟩
-    let capturedCount := List.length ∘ List.filter fun pos' => field.isPlayersPoint pos' enemyPlayer
-    let freedCount := List.length ∘ List.filter fun pos' => field.isCapturedPoint pos' player
-    let ⟨emptyCaptures, realCaptures⟩ := captures.partition fun ⟨_, captured⟩ => capturedCount captured == 0
-    let capturedTotal := List.sum $ realCaptures.map (capturedCount ·.2)
-    let freedTotal := List.sum $ realCaptures.map (freedCount ·.2)
-    let realCaptured := realCaptures.flatMap (·.2)
+    let chains: List $ _ × _ := inputPoints.flatMap fun ⟨⟨chainPos, chainAdj⟩, ⟨capturedPos, _⟩⟩ =>
+      ((field.buildChain pos chainPos chainAdj player).map fun chain => ⟨chain, capturedPos⟩).toList
+    let fieldWithCaptures := (chains.toArray.qsort (·.fst.list.length < ·.fst.list.length)).foldl (fun field ⟨chain, capturedPos⟩ =>
+      let captured := (getInsideRing capturedPos chain).toList
+      let capturedCount := (captured.filter fun pos' => field.isPlayersPoint pos' enemyPlayer).length
+      let freedCount := (captured.filter fun pos' => field.isCapturedPoint pos' player).length
+      if capturedCount > 0 then
+        { field with
+          scoreRed := if player == Player.red then field.scoreRed + capturedCount else field.scoreRed - freedCount
+        , scoreBlack := if player == Player.black then field.scoreBlack + capturedCount else field.scoreBlack - freedCount
+        , lastSurroundChains := chain :: field.lastSurroundChains
+        , points := captured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) field.points
+        }
+      else
+        { field with
+          points := (captured.filter fun pos' => field.point pos' == Point.EmptyPoint).foldr (fun pos' points => points.set (Pos.toFin pos') $ Point.EmptyBasePoint player) field.points
+        }
+    ) $ { field with lastSurroundPlayer := player, lastSurroundChains := [] }
     if point == Point.EmptyBasePoint enemyPlayer then
-      let enemyEmptyBaseChain := field.getEmptyBaseChain pos enemyPlayer
-      let enemyEmptyBase := (enemyEmptyBaseChain.elim Std.HashSet.empty $ getInsideRing pos).toList.filter fun pos' => field.isEmptyBase pos' enemyPlayer
-      if captures.isEmpty then
-        { scoreRed := if player == Player.red then field.scoreRed else field.scoreRed + 1
+      if !fieldWithCaptures.lastSurroundChains.isEmpty then
+        let enemyEmptyBase := wave' pos fun pos' => fieldWithCaptures.isEmptyBase pos' enemyPlayer
+        { fieldWithCaptures with
+          moves := newMoves
+        , points := let points₁ := fieldWithCaptures.points.set (Pos.toFin pos) $ Point.PlayerPoint player
+                    let points₂ := enemyEmptyBase.toList.foldr (fun pos' points => points.set (Pos.toFin pos') Point.EmptyPoint) points₁
+                    points₂
+        }
+      else
+        let enemyEmptyBaseChain := field.getEmptyBaseChain pos enemyPlayer
+        let enemyEmptyBase := (enemyEmptyBaseChain.elim Std.HashSet.empty $ getInsideRing pos).toList.filter fun pos' => field.isEmptyBase pos' enemyPlayer
+        { fieldWithCaptures with
+          scoreRed := if player == Player.red then field.scoreRed else field.scoreRed + 1
         , scoreBlack := if player == Player.black then field.scoreBlack else field.scoreBlack + 1
         , moves := newMoves
         , lastSurroundChains := enemyEmptyBaseChain.toList
         , lastSurroundPlayer := enemyPlayer
-        , points := let points₁ := enemyEmptyBase.foldr (fun pos' points => points.set pos'.toFin $ Point.BasePoint enemyPlayer false) field.points
+        , points := let points₁ := enemyEmptyBase.foldr (fun pos' points => points.set pos'.toFin $ Point.BasePoint enemyPlayer false) fieldWithCaptures.points
                     let points₂ := points₁.set pos.toFin $ Point.BasePoint enemyPlayer true
                     points₂
         }
-      else
-        { scoreRed := if player == Player.red then field.scoreRed + capturedTotal else field.scoreRed - freedTotal
-        , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
-        , moves := newMoves
-        , lastSurroundChains := realCaptures.map (·.1)
-        , lastSurroundPlayer := player
-        , points := let points₁ := field.points.set (Pos.toFin pos) $ Point.PlayerPoint player
-                    let points₂ := enemyEmptyBase.foldr (fun pos' points => points.set (Pos.toFin pos') Point.EmptyPoint) points₁
-                    let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
-                    points₃
-        }
     else
-      let newEmptyBase := (emptyCaptures.flatMap (·.2)).filter fun pos' => field.point pos' == Point.EmptyPoint
-      { scoreRed := if player == Player.red then field.scoreRed + capturedTotal else field.scoreRed - freedTotal
-      , scoreBlack := if player == Player.black then field.scoreBlack + capturedTotal else field.scoreBlack - freedTotal
-      , moves := newMoves
-      , lastSurroundChains := realCaptures.map (·.1)
-      , lastSurroundPlayer := player
-      , points := let points₁ := field.points.set (Pos.toFin pos) $ Point.PlayerPoint player
-                  let points₂ := newEmptyBase.foldr (fun pos' points => points.set (Pos.toFin pos') $ Point.EmptyBasePoint player) points₁
-                  let points₃ := realCaptured.foldr (fun pos' points => points.set (Pos.toFin pos') $ capture player (field.point pos')) points₂
-                  points₃
+      { fieldWithCaptures with
+        moves := newMoves
+      , points := fieldWithCaptures.points.set (Pos.toFin pos) $ Point.PlayerPoint player
       }
 
 @[macro_inline]

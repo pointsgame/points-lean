@@ -177,6 +177,24 @@ def twoSurroundingsWithCommonDotOneBorderlineEmptyPlace := constructField "
 ..a..
 "
 
+def ambiguousSurrounding1 := constructField "
+.aa.aa.
+a..b..a
+a.aAa.a
+a..a..a
+.a...a.
+..aaa..
+"
+
+def ambiguousSurrounding2 := constructField "
+..aaa..
+.a...a.
+a..a..a
+a.aAa.a
+a..b..a
+.aa.aa.
+"
+
 #lspec
   LSpec.test "simple surround" (simpleSurround.elim false fun field => field.field.scoreRed = 1 && field.field.scoreBlack == 0) $
   LSpec.test "surround empty territory" (surroundEmptyTerritory.elim false fun field => field.field.scoreRed == 0 && field.field.scoreBlack == 0) $
@@ -196,4 +214,6 @@ def twoSurroundingsWithCommonDotOneBorderlineEmptyPlace := constructField "
   LSpec.test "2 surroundings with common border" (twoSurroundingsWithCommonBorder.elim false fun field => field.field.scoreRed == 2 && field.field.scoreBlack == 0) $
   LSpec.test "2 surroundings with common dot" (twoSurroundingsWithCommonDot.elim false fun field => field.field.scoreRed == 2 && field.field.scoreBlack == 0) $
   LSpec.test "3 surroundings with common borders" (threeSurroundingsWithCommonBorders.elim false fun field => field.field.scoreRed == 3 && field.field.scoreBlack == 0) $
-  LSpec.test "2 surroundings with common dot, one borderline empty place" (twoSurroundingsWithCommonDotOneBorderlineEmptyPlace.elim false fun field => field.field.scoreRed == 2 && field.field.scoreBlack == 0)
+  LSpec.test "2 surroundings with common dot, one borderline empty place" (twoSurroundingsWithCommonDotOneBorderlineEmptyPlace.elim false fun field => field.field.scoreRed == 2 && field.field.scoreBlack == 0) $
+  LSpec.test "ambiguous surrounding 1" (ambiguousSurrounding1.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0) $
+  LSpec.test "ambiguous surrounding 2" (ambiguousSurrounding2.elim false fun field => field.field.scoreRed == 1 && field.field.scoreBlack == 0)
